@@ -1,110 +1,137 @@
-name: Deploy
+name: Deploy 
 
 on:
-  push:
-    branches: [main]
+push:
+branches: [main] 
 
 jobs:
-  build-and-push:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout do código
-        uses: actions/checkout@v4
+build-and-push:
+runs-on: ubuntu-latest
+steps:
+- name: Checkout do código
+uses: actions/checkout@v4 
 
-      - name: Configurar credenciais AWS
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: us-east-1
+* name: Configurar credenciais AWS
+uses: aws-actions/configure-aws-credentials@v4
+with:
+aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+aws-region: us-east-1
+* name: Login no Amazon ECR
+id: login-ecr
+uses: aws-actions/amazon-ecr-login@v2
+* name: Build, tag e push — frontend
+working-directory: frontend
+env:
+REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+IMAGE_TAG: ${{ github.sha }}
+run: |
+docker build -t $REGISTRY/final-yuri-paul-frontend:
 
-      - name: Login no Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+IMAGETAG−tcap I cap M cap A cap G cap E sub cap T cap A cap G minus t
+𝐼𝑀𝐴𝐺𝐸𝑇𝐴𝐺−𝑡
+REGISTRY/final-yuri-paul-frontend:latest .
+docker push 
 
-      - name: Build, tag e push — frontend
-        working-directory: frontend
-        env:
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          docker build -t $REGISTRY/aula05-frontend:$IMAGE_TAG -t $REGISTRY/aula05-frontend:latest .
-          docker push $REGISTRY/aula05-frontend:$IMAGE_TAG
-          docker push $REGISTRY/aula05-frontend:latest
+REGISTRY/final−yuri−paul−frontend∶cap R cap E cap G cap I cap S cap T cap R cap Y / f i n a l minus y u r i minus p a u l minus f r o n t e n d colon
+𝑅𝐸𝐺𝐼𝑆𝑇𝑅𝑌/𝑓𝑖𝑛𝑎𝑙−𝑦𝑢𝑟𝑖−𝑝𝑎𝑢𝑙−𝑓𝑟𝑜𝑛𝑡𝑒𝑛𝑑∶
+IMAGE_TAG
+docker push $REGISTRY/final-yuri-paul-frontend:latest
+* name: Build, tag e push — api
+working-directory: api
+env:
+REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+IMAGE_TAG: ${{ github.sha }}
+run: |
+docker build -t $REGISTRY/final-yuri-paul-api:
 
-      - name: Build, tag e push — api
-        working-directory: api
-        env:
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          docker build -t $REGISTRY/aula05-api:$IMAGE_TAG -t $REGISTRY/aula05-api:latest .
-          docker push $REGISTRY/aula05-api:$IMAGE_TAG
-          docker push $REGISTRY/aula05-api:latest
+IMAGETAG−tcap I cap M cap A cap G cap E sub cap T cap A cap G minus t
+𝐼𝑀𝐴𝐺𝐸𝑇𝐴𝐺−𝑡
+REGISTRY/final-yuri-paul-api:latest .
+docker push 
 
-  deploy:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    steps:
-      - name: Configurar credenciais AWS
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: us-east-1
+REGISTRY/final−yuri−paul−api∶cap R cap E cap G cap I cap S cap T cap R cap Y / f i n a l minus y u r i minus p a u l minus a p i colon
+𝑅𝐸𝐺𝐼𝑆𝑇𝑅𝑌/𝑓𝑖𝑛𝑎𝑙−𝑦𝑢𝑟𝑖−𝑝𝑎𝑢𝑙−𝑎𝑝𝑖∶
+IMAGE_TAG
+docker push $REGISTRY/final-yuri-paul-api:latest
 
-      - name: Login no Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+deploy:
+needs: build-and-push
+runs-on: ubuntu-latest
+steps:
+- name: Configurar credenciais AWS
+uses: aws-actions/configure-aws-credentials@v4
+with:
+aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+aws-region: us-east-1 
 
-      # --- frontend ---
-      - name: Baixar Task Definition atual — frontend
-        run: |
-          aws ecs describe-task-definition \
-            --task-definition aula05-frontend \
-            --query "taskDefinition" > task-def-frontend.json
+* name: Login no Amazon ECR
+id: login-ecr
+uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Renderizar nova revisão — frontend
-        id: render-frontend
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: task-def-frontend.json
-          container-name: frontend
-          image: ${{ steps.login-ecr.outputs.registry }}/aula05-frontend:${{ github.sha }}
+### --- frontend ---
 
-      - name: Deploy — frontend
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
-        with:
-          task-definition: ${{ steps.render-frontend.outputs.task-definition }}
-          service: aula05-frontend
-          cluster: aula05-cluster
-          wait-for-service-stability: true
+* name: Baixar Task Definition atual — frontend
+run: |
+aws ecs describe-task-definition 
+--task-definition final-yuri-paul-frontend 
+--query "taskDefinition" > task-def-frontend.json
+* name: Renderizar nova revisão — frontend
+id: render-frontend
+uses: aws-actions/amazon-ecs-render-task-definition@v1
+with:
+task-definition: task-def-frontend.json
+container-name: frontend
+image: 
+𝑠𝑡𝑒𝑝𝑠.𝑙𝑜𝑔𝑖𝑛−𝑒𝑐𝑟.𝑜𝑢𝑡𝑝𝑢𝑡𝑠.𝑟𝑒𝑔𝑖𝑠𝑡𝑟𝑦
 
-      # --- api ---
-      - name: Baixar Task Definition atual — api
-        run: |
-          aws ecs describe-task-definition \
-            --task-definition aula05-api \
-            --query "taskDefinition" > task-def-api.json
+/𝑓𝑖𝑛𝑎𝑙
 
-      - name: Renderizar nova revisão — api
-        id: render-api
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: task-def-api.json
-          container-name: api
-          image: ${{ steps.login-ecr.outputs.registry }}/aula05-api:${{ github.sha }}
+−𝑦𝑢𝑟𝑖
 
-      - name: Deploy — api
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
-        with:
-          task-definition: ${{ steps.render-api.outputs.task-definition }}
-          service: aula05-api
-          cluster: aula05-cluster
-          wait-for-service-stability: true
+−𝑝𝑎𝑢𝑙
+
+−𝑓𝑟𝑜𝑛𝑡𝑒𝑛𝑑
+
+∶
+{{ github.sha }}
+* name: Deploy — frontend
+uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+with:
+task-definition: ${{ steps.render-frontend.outputs.task-definition }}
+service: final-yuri-paul-frontend-svc
+cluster: final-yuri-paul-cluster
+wait-for-service-stability: true
+
+# --- api ---
+
+* name: Baixar Task Definition atual — api
+run: |
+aws ecs describe-task-definition 
+--task-definition final-yuri-paul-api 
+--query "taskDefinition" > task-def-api.json
+* name: Renderizar nova revisão — api
+id: render-api
+uses: aws-actions/amazon-ecs-render-task-definition@v1
+with:
+task-definition: task-def-api.json
+container-name: api
+image: 
+
+steps.login−ecr.outputs.registry/final−yuri−paul−api∶s t e p s point l o g i n minus e c r point o u t p u t s point r e g i s t r y / f i n a l minus y u r i minus p a u l minus a p i colon
+𝑠𝑡𝑒𝑝𝑠.𝑙𝑜𝑔𝑖𝑛−𝑒𝑐𝑟.𝑜𝑢𝑡𝑝𝑢𝑡𝑠.𝑟𝑒𝑔𝑖𝑠𝑡𝑟𝑦/𝑓𝑖𝑛𝑎𝑙−𝑦𝑢𝑟𝑖−𝑝𝑎𝑢𝑙−𝑎𝑝𝑖∶
+{{ github.sha }}
+* name: Deploy — api
+uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+with:
+task-definition: ${{ steps.render-api.outputs.task-definition }}
+service: final-yuri-paul-api-svc
+cluster: final-yuri-paul-cluster
+wait-for-service-stability: true
 
 concurrency:
-  group: deploy-${{ github.ref }}
-  cancel-in-progress: false
+group: deploy-${{ github.ref }}
+cancel-in-progress: false
