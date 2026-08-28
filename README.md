@@ -65,4 +65,4 @@ no repositório de infraestrutura.
 | `DB_USER` | Usuário do banco |
 | `DB_PASSWORD` | Senha do banco |
 
-Veja [`.env.example`](.env.example).
+Veja [`.env.example`](.env.example)
